@@ -12,6 +12,10 @@
 !
 ! INPUT VARIABLES:
 !
+!  VEC             LOGICAL
+!                    If .TRUE. the Schur vectors V and W will be updated, 
+!                    otherwise V, W, and M are never referenced in the code
+!
 !  N               INTEGER
 !                    dimension of matrix
 !
@@ -22,6 +26,13 @@
 !  C1,C2,B1,B2     REAL(8) arrays of dimension (3*N)
 !                    arrays of generators for unitary plus rank one
 !                    upper-trinagular matrices
+!
+!  M               INTEGER
+!                    leading dimension of V, W
+!
+!  V, W            COMPLEX(8) arrays of dimension (M,N)
+!                    Schur vectors that will be updated while
+!                    reordering the Schur form
 !
 !  SEL             INTEGER array of dimension(NSEL)
 !                    array containing the indices of the eigenvalues
@@ -37,14 +48,16 @@
 !                    INFO = 0 implies successful computation
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_upr1utri_ord(N,D1,C1,B1,D2,C2,B2,SEL,NSEL,INFO)
+subroutine z_upr1utri_ord(VEC,N,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
   
   implicit none
 
   ! input variables
-  integer, intent(in) :: N, NSEL
+  logical, intent(in) :: VEC
+  integer, intent(in) :: N, M, NSEL
   integer, intent(inout) :: SEL(NSEL)
   real(8), intent(inout) :: D1(2*N), D2(2*N), C1(3*N), B1(3*N), C2(3*N), B2(3*N)
+  complex(8), intent(inout) :: V(M,N), W(M,N)
   integer, intent(out)   :: INFO
 
   ! local variables
@@ -61,8 +74,9 @@ subroutine z_upr1utri_ord(N,D1,C1,B1,D2,C2,B2,SEL,NSEL,INFO)
         if (SEL(jj).lt.SEL(ii)) offset = offset - 1
      END DO
      
-     call z_upr1utri_moveup(N-ii+1, D1(2*ii-1), C1(3*ii-2), B1(3*ii-2), &
-          D2(2*ii-1), C2(3*ii-2), B2(3*ii-2), SEL(ii) + offset)
+     call z_upr1utri_moveup(VEC, N-ii+1, D1(2*ii-1), C1(3*ii-2), B1(3*ii-2), &
+          D2(2*ii-1), C2(3*ii-2), B2(3*ii-2), &
+          M, V(:,ii:N), W(:,ii:N), SEL(ii) + offset)
   end do
   
 end subroutine z_upr1utri_ord
