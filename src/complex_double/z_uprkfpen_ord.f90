@@ -57,7 +57,7 @@ subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
 
   ! input variables
   logical, intent(in) :: VEC
-  integer, intent(in) :: N, M, NSEL
+  integer, intent(in) :: N, K, M, NSEL
   integer, intent(inout) :: SEL(NSEL)
   real(8), intent(inout) :: D1(2*N*K), D2(2*N*K), C1(3*N*K), B1(3*N*K), C2(3*N*K), B2(3*N*K)
   complex(8), intent(inout) :: V(M,N), W(M,N)
