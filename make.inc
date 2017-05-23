@@ -13,7 +13,7 @@ FFLAGS := -O3 -std=f95
 FFLAGS := -g -O0
 
 # libs required by compiler
-LIBS := 
+LIBS := -llapack -lblas
 
 
 

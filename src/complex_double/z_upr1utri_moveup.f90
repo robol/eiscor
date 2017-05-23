@@ -72,7 +72,6 @@ subroutine z_upr1utri_moveup(VEC,N,D1,C1,B1,D2,C2,B2,M,V,W,ISEL)
         V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         W(:,ii:ii+1) = matmul(W(:,ii:ii+1), A)
      end if
-
      
      call z_upr1utri_rot3swap(.TRUE., D2(2*ii-1), C2(3*ii-2), B2(3*ii-2), G)
 
