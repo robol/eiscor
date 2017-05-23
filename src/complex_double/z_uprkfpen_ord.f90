@@ -72,14 +72,14 @@ subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
   do ii = 1, NSEL
      ! Make sure that we compute the right index in the transformed
      ! Schur form (updated with the swapping already performed)
-     !offset = 0
-     !DO jj = 1, ii - 1
-     !   if (SEL(jj).lt.SEL(ii)) offset = offset - 1
-     !END DO
+     offset = 0
+     DO jj = 1, ii - 1
+        if (SEL(jj).gt.SEL(ii)) offset = offset + 1
+     END DO
      
      call z_uprkfpen_moveup(VEC, N, K, ii, D1, C1, B1, &
           D2, C2, B2, &
-          M, V, W, SEL(ii))
+          M, V, W, SEL(ii) + offset)
   end do
   
 end subroutine z_uprkfpen_ord
