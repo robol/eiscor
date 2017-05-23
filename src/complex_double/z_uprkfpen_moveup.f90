@@ -49,7 +49,7 @@ subroutine z_uprkfpen_moveup(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL)
 
   ! input variables
   logical, intent(in) :: VEC
-  integer, intent(in) :: N, K, ISEL, M
+  integer, intent(in) :: N, K, ISEL, M, STR
   real(8), intent(inout) :: C1(3*N*K), B1(3*N*K), C2(3*N*K), B2(3*N*K)
   real(8), intent(inout) :: D1(2*N*K), D2(2*N*K)
   complex(8), intent(inout) :: V(M,N), W(M,N)
