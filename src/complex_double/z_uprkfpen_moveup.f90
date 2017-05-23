@@ -43,7 +43,7 @@
 ! OUTPUT VARIABLES:
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprkfpen_moveup(VEC,N,K,D1,C1,B1,D2,C2,B2,M,V,W,ISEL)
+subroutine z_uprkfpen_moveup(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL)
   
   implicit none
 
@@ -60,7 +60,7 @@ subroutine z_uprkfpen_moveup(VEC,N,K,D1,C1,B1,D2,C2,B2,M,V,W,ISEL)
   complex(8) :: A(2,2)
 
   ! Move the specified eigenvalue to the top
-  do ii = ISEL - 1, 1, -1
+  do ii = ISEL - 1, STR, -1
      ! Swap the eigenvalues in position (ii, ii + 1)
      call z_uprkfpen_swapping_rotation(N,K, ii, D1, &
           C1, B1, D2, C2, B2, G)
