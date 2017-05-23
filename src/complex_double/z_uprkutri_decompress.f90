@@ -20,6 +20,9 @@
 !  N               INTEGER
 !                    dimension of matrix
 !
+!  K               INTEGER
+!                    rank, i.e., number of upper triangulars
+!
 !  D               REAL(8) array of dimension (2*N)
 !                    array of generators for complex diagonal matrix
 !
