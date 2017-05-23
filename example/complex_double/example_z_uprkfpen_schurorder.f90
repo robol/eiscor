@@ -2,7 +2,7 @@ program example_z_upr1fpen_schurorder
   implicit none
 
   integer, parameter :: k = 2, dd = 2, N = dd * k
-  integer :: ITS(N), INFO, ii, SEL(N), ISEL = 2, jj
+  integer :: ITS(N), INFO, ii, SEL(N), ISEL = 3, jj
   complex(8) :: MA(N,k), MB(N,k), T1(N,N), T2(N,N), EIGS(N)
   real(8) :: Q(3*(N-1))
   real(8) :: C1(3*N*k), B1(3*N*k), C2(3*N*k), B2(3*N*k), G(3), ERR
@@ -95,7 +95,7 @@ program example_z_upr1fpen_schurorder
   !   write (*,*) T1(ii, :)
   ! end do
 
-  SEL(1:ISEL) = (/ 3, 2 /)
+  SEL(1:ISEL) = (/ 3, 2, 4 /)
 
   print *, 'Permuting eigenvalues using '
   print *, ''
