@@ -33,7 +33,7 @@ program example_z_uprkfpen_2manyscaled
   real(8), allocatable :: Q(:), D1(:), C1(:), B1(:)
   real(8), allocatable :: D2(:), C2(:), B2(:), RWORK(:)
   logical, allocatable :: P(:)
-  real(8) :: h, maxerr, ru,rv,rw,s
+  real(8) :: h, maxerr, ru,rv,rw,s,scl
   complex(8) :: Gf(2,2)
 
   ! real and imag part of eigenvalues
@@ -208,6 +208,13 @@ program example_z_uprkfpen_2manyscaled
         end do
         
         norma = sqrt(h) 
+
+  ! scl = 1.d0
+  scl = norma
+
+  ! Perform scaling
+  MA = MA / scl
+  MB = MB / scl
         
         MC = MA
         MD = MB
@@ -406,7 +413,7 @@ program example_z_uprkfpen_2manyscaled
 
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,TA)
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,TB)
- 
+
   do ii = 1,N
      do jj = 1,N
         Vt(ii,jj) = conjg(V(jj,ii))

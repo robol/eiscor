@@ -45,13 +45,17 @@
 !  NSEL            INTEGER
 !                    dimension of the array SEL
 !
+!  DIR             CHARACTER
+!                    can be 'T' to move the selected eigenvalues to the top, or
+!                    'B' to move them to the bottom of the matrix. 
+!
 ! OUTPUT VARIABLES:
 !
 !  INFO            INTEGER
 !                    INFO = 0 implies successful computation
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
+subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,DIR,INFO)
   
   implicit none
 
@@ -61,6 +65,7 @@ subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
   integer, intent(inout) :: SEL(NSEL)
   real(8), intent(inout) :: D1(2*N*K), D2(2*N*K), C1(3*N*K), B1(3*N*K), C2(3*N*K), B2(3*N*K)
   complex(8), intent(inout) :: V(M,N), W(M,N)
+  character, intent(in) :: DIR
   integer, intent(out)   :: INFO
 
   ! local variables
@@ -73,13 +78,13 @@ subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,INFO)
      ! Make sure that we compute the right index in the transformed
      ! Schur form (updated with the swapping already performed)
      offset = 0
-     DO jj = 1, ii - 1
-        if (SEL(jj).gt.SEL(ii)) offset = offset + 1
+     DO jj = 1, ii - 1        
+        if ((DIR .eq. 'T') .and. (SEL(jj).gt.SEL(ii))) offset = offset + 1
      END DO
      
-     call z_uprkfpen_moveup(VEC, N, K, ii, D1, C1, B1, &
+     call z_uprkfpen_move(VEC, N, K, ii, D1, C1, B1, &
           D2, C2, B2, &
-          M, V, W, SEL(ii) + offset)
+          M, V, W, SEL(ii) + offset, DIR)
   end do
   
 end subroutine z_uprkfpen_ord

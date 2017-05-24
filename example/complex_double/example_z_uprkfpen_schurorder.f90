@@ -28,8 +28,8 @@ program example_z_upr1fpen_schurorder
 
   do ii=1,N
      do jj=1,k
-        MA(ii,jj) = cmplx(dble(MA(ii,jj)),0d0,kind=8)
-        MB(ii,jj) = cmplx(dble(MB(ii,jj)),0d0,kind=8)
+        !MA(ii,jj) = cmplx(dble(MA(ii,jj)),0d0,kind=8)
+        !MB(ii,jj) = cmplx(dble(MB(ii,jj)),0d0,kind=8)
      end do
   end do
   ! make P0 lower triangular
@@ -50,7 +50,15 @@ program example_z_upr1fpen_schurorder
      write(*,*) MA(ii,:)
   end do
 
-  call z_uprk_compress(.TRUE.,.TRUE.,.TRUE.,N,K,MA,MB,P,Q,&
+  QQ = 0
+  ZZ = 0
+
+  do ii = 1, N
+     QQ(ii,ii) = 1
+     ZZ(ii,ii) = 1
+  end  do
+
+  call z_uprk_compress(.TRUE.,.TRUE.,.FALSE.,N,K,MA,MB,N,P,Q,&
        &D1,C1,B1,D2,C2,B2,QQ,ZZ,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkdense_factor: ", INFO
@@ -89,11 +97,12 @@ program example_z_upr1fpen_schurorder
      write(*,*) '        ', EIGS(ii), T1(ii,ii), T2(ii,ii)
   end do
 
-  ! T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
+  T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
 
-  ! do ii = 1, N
-  !   write (*,*) T1(ii, :)
-  ! end do
+  print *, 'T1'
+  do ii = 1, K
+     write (*,*) REAL(T1(ii, 1:K))
+  end do
 
   SEL(1:ISEL) = (/ 3, 2, 4 /)
 
@@ -102,9 +111,9 @@ program example_z_upr1fpen_schurorder
   print *, 'SEL = ', SEL(1:ISEL)
 
   print *, ''
-  print *, 'The selected eigenalues will be taken to the top'
+  print *, 'The selected eigenalues will be taken to the bottom'
   
-  call z_uprkfpen_ord(.FALSE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, ISEL, INFO)
+  call z_uprkfpen_ord(.TRUE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, ISEL, 'B', INFO)
 
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,T1)
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,T2)
@@ -117,9 +126,11 @@ program example_z_upr1fpen_schurorder
      write(*,*) '        ', EIGS(ii), T1(ii,ii), T2(ii,ii)
   end do
 
-  print*, "T1", T1
-  print*, "T2", T2
+  T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
   
+  print *, 'T1'
+  do ii = 1, N
+     print *, REAL(T1(ii,:))
+  end do
 
-  
 end program example_z_upr1fpen_schurorder

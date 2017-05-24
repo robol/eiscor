@@ -130,7 +130,7 @@ subroutine z_uprkdense_qz(VEC,N,K,A,B,M,EIGSA,EIGSB,V,W,S,T,INFO)
 !!$    return
 !!$  end if  
   
-  call z_uprk_compress(.TRUE.,VEC,.TRUE.,N,K,A,B,P,Q,&
+  call z_uprk_compress(.TRUE.,VEC,.TRUE.,N,K,A,B,M,P,Q,&
        &D1,C1,B1,D2,C2,B2,V,W,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkdense_factor: ", INFO
