@@ -40,6 +40,9 @@
 !
 !  Ain,Bin         COMPLEX(8) array of dimension (N,K)
 !                    coefficients matrix polynomial
+!
+!  M               INTEGER
+!                    leading dimension of V and W
 ! 
 ! OUTPUT VARIABLES:
 !
@@ -57,10 +60,10 @@
 !                    array of generators for upper-triangular parts
 !                    of the pencil
 !
-!  V               COMPLEX(8) array of dimension (N,N)
+!  V               COMPLEX(8) array of dimension (M,N)
 !                    right schur vectors
 !
-!  W               COMPLEX(8) array of dimension (N,N)
+!  W               COMPLEX(8) array of dimension (M,N)
 !                    left schur vectors
 !
 !  INFO            INTEGER
@@ -72,19 +75,19 @@
 !                    INFO = -10 implies W is invalid
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,P,Q,D1,&
+subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,M,P,Q,D1,&
      &C1,B1,D2,C2,B2,V,W,INFO)
 
   implicit none
   
   ! input variables
   logical, intent(in) :: QZ, VEC, ID
-  integer, intent(in) :: N,K
+  integer, intent(in) :: N,K,M
   complex(8), intent(in) :: Ain(N,K), Bin(N,K)
   logical, intent(inout) :: P(N-2)
   real(8), intent(inout) :: Q(3*K*(N-1)), D1(2*K*N), C1(3*N*K), B1(3*N*K)
   real(8), intent(inout) :: D2(2*K*N), C2(3*N*K), B2(3*N*K)
-  complex(8), intent(inout) :: V(N,N), W(N,N)
+  complex(8), intent(inout) :: V(M,N), W(M,N)
   integer, intent(inout) :: INFO
 
   ! compute variables

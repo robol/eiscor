@@ -1,4 +1,5 @@
-include make.inc .master.inc
+include make.inc
+include .master.inc
 
 SRCS := $(wildcard ./src/*/*.f90)
 OBJS := $(SRCS:.f90=.o)
@@ -19,7 +20,7 @@ benchmark%:
 	@$(MAKE) $@ -C ./benchmark
 
 lib$(LIBNAME).$(SLIB).$(VERSION): srcs
-	$(FC) $(FFLAGS) -shared -o lib$(LIBNAME).$(SLIB).$(VERSION) $(OBJS) 
+	$(FC) $(FFLAGS) -shared -o lib$(LIBNAME).$(SLIB).$(VERSION) $(OBJS) $(LAPACK_LIBS)
 
 srcs:
 	@$(MAKE) $@ -C ./src

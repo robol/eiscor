@@ -60,15 +60,24 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
   character :: DIR
 
   ! local variables
-  integer :: ii
+  integer :: ii, ITS(2), INFO
   real(8) :: G(3), H(3)
   complex(8) :: A(2,2)
+  logical :: P(2)
+
+  interface
+     function l_upr1fact_hess(m,flags)
+       logical :: l_upr1fact_hess
+       integer, intent(in) :: m
+       logical, dimension(m-2), intent(in) :: flags
+     end function l_upr1fact_hess
+  end interface  
 
   ! Move the specified eigenvalue to the top or to the bottom
   if (DIR .EQ. 'T') then
      do ii = ISEL - 1, STR, -1
         ! Swap the eigenvalues in position (ii, ii + 1)
-        call z_uprkfpen_swapping_rotation(N,K, ii, D1, &
+        call z_uprkfpen_swapping_rotation(N, K, ii, D1, &
              C1, B1, D2, C2, B2, G)
         
         ! update left Schurvectors with G
@@ -97,8 +106,6 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)
            A(2,2) = cmplx(G(1),-G(2),kind=8)
-           
-           print *, A
            
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
@@ -108,18 +115,18 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         ! We now should have the identity. As a santity check, we might want
         ! to make sure that ABS(G(3)) ~ 0. 
         call z_rot3_fusion(.TRUE., G, H)
-        
-        print *, H
-        
+
+        call z_upr1utri_unimodscale(.TRUE., D1(2*ii-1), C1(3*ii-2), &
+             B1(3*ii-2), cmplx(H(1), H(2)))        
      end do
   else
      do ii = ISEL, N - STR
         ! Swap the eigenvalues in position (ii, ii + 1)
-        call z_uprkfpen_swapping_rotation(N,K, ii, D1, &
+        call z_uprkfpen_swapping_rotation(N, K, ii, D1, &
              C1, B1, D2, C2, B2, G)
         
         ! update left Schurvectors with G
-        if (VEC) then        
+100     if (VEC) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)
@@ -130,14 +137,14 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         
         G(2) = -G(2)
         G(3) = -G(3)
-        H = G    
-        
-        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
+        H = G
+                
+        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
         
         ! Invert the rotation and pass it throught the other matrix
         G(2) = -G(2)
         G(3) = -G(3)
-        
+
         ! update right Schurvectors with G
         if (VEC) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
@@ -148,11 +155,17 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
         
-        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
+        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)
         
         ! We now should have the identity. As a santity check, we might want
-        ! to make sure that ABS(G(3)) ~ 0. 
-        call z_rot3_fusion(.TRUE., G, H)        
+        ! to make sure that ABS(G(3)) ~ 0.
+        call z_rot3_fusion(.TRUE., G, H)
+
+        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii-1), C2(3*ii-2), &
+        !     B2(3*ii-2), cmplx(H(1), H(2)))
+        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii+1), C2(3*ii+1), &
+        !     B2(3*ii+1), cmplx(H(1), -H(2)))
+        
      end do
   end if
      

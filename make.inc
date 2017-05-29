@@ -4,6 +4,8 @@
 #
 ############################################################
 
+LAPACK_LIBS := -llapack -lblas
+
 # directory where the library will be installed
 INSTALLDIR := $(HOME)
 
@@ -11,9 +13,7 @@ INSTALLDIR := $(HOME)
 FC := gfortran
 FFLAGS := -O3 -std=f95
 
-# libs required by compiler
-# LIBS := -llapack -lblas
-
-
-
+ifdef LAPACK_LIBS
+  FFLAGS := $(FFLAGS) -DHAVE_LAPACK
+endif
 

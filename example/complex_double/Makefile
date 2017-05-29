@@ -20,7 +20,7 @@ run: $(ZEXS)
 	@$(foreach example,$(ZEXS),./$(example) &&) echo 'End of complex_double examples!'
 
 %:: %.f90
-	$(FC) $(FFLAGS) -cpp $< -o $@ -I ../../include $(INSTALLDIR)/eiscor/lib/lib$(LIBNAME).$(SLIB).$(VERSION)  $(LIBS)
+	$(FC) $(FFLAGS) -cpp $< -o $@ -I ../../include $(INSTALLDIR)/eiscor/lib/lib$(LIBNAME).$(SLIB).$(VERSION)  $(LAPACK_LIBS)
 
 clean:
 	@rm -f $(ZEXS)	
