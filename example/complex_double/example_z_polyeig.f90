@@ -3,7 +3,7 @@ program example_z_polyeig
   implicit none
 
   ! Test the use of the polyeig routine
-  integer, parameter :: D = 3, K = 64, N = D*K
+  integer, parameter :: D = 3, K = 15, N = D*K
   complex(8) :: P(K,K,D+1), V(K,N), EIGS(N), w(K)
   complex(8) :: tauq(K), taup(K), WORK(N)
   double precision :: DD(K), E(K), RWORK(4*K)
@@ -12,7 +12,7 @@ program example_z_polyeig
 
   call system_clock(count_rate = c_rate)
 
-  ! call u_randomseed_initialize(INFO)    
+  call u_randomseed_initialize(INFO)    
   do kk = 1, d + 1
      call z_2Darray_random_normal(k,k,P(1,1,kk))
   end do
@@ -20,8 +20,8 @@ program example_z_polyeig
   ! Make the polynomial upper triangular in P0 and Pd
   do ii = 2, k
      do jj = 1, ii - 1
-        ! P(ii,jj,d+1) = 0.d0
-        ! P(ii,jj,1) = 0.d0        
+        P(ii,jj,d+1) = 0.d0
+        P(ii,jj,1) = 0.d0        
      end do
   end do
 
@@ -41,8 +41,6 @@ program example_z_polyeig
         end do
      end do
   end do
-
-  print *, pol_norm
 
   maxlbe = 0
   maxrbe = 0
@@ -103,7 +101,6 @@ program example_z_polyeig
 
      if (DD(K) .ge. maxbe) maxbe = DD(K) / DD(1)
   end do
-  
 
   print *, '================================================'
   print *, 'Maximum backward error on left eigenvectors: ', maxlbe

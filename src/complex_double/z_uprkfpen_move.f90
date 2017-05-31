@@ -63,7 +63,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
   integer :: ii, ITS(2), INFO
   real(8) :: G(3), H(3)
   complex(8) :: A(2,2)
-  logical :: P(2)
+  logical :: P(2), SDIR
 
   interface
      function l_upr1fact_hess(m,flags)
@@ -78,7 +78,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
      do ii = ISEL - 1, STR, -1
         ! Swap the eigenvalues in position (ii, ii + 1)
         call z_uprkfpen_swapping_rotation(N, K, ii, D1, &
-             C1, B1, D2, C2, B2, G)
+             C1, B1, D2, C2, B2, G, SDIR)
         
         ! update left Schurvectors with G
         if (VEC) then        
@@ -93,8 +93,12 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         G(2) = -G(2)
         G(3) = -G(3)
         H = G    
-        
-        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
+
+        if (SDIR) then
+           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
+        else
+           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
+        end if
         
         ! Invert the rotation and pass it throught the other matrix
         G(2) = -G(2)
@@ -109,8 +113,12 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
-        
-        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
+
+        if (SDIR) then
+           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)           
+        else
+           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
+        end if
         
         ! We now should have the identity. As a santity check, we might want
         ! to make sure that ABS(G(3)) ~ 0. 
@@ -123,7 +131,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
      do ii = ISEL, N - STR
         ! Swap the eigenvalues in position (ii, ii + 1)
         call z_uprkfpen_swapping_rotation(N, K, ii, D1, &
-             C1, B1, D2, C2, B2, G)
+             C1, B1, D2, C2, B2, G, SDIR)
         
         ! update left Schurvectors with G
 100     if (VEC) then        
@@ -138,9 +146,13 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         G(2) = -G(2)
         G(3) = -G(3)
         H = G
+
+        if (SDIR) then
+           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
+        else
+           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
+        end if
                 
-        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
-        
         ! Invert the rotation and pass it throught the other matrix
         G(2) = -G(2)
         G(3) = -G(3)
@@ -154,18 +166,16 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
-        
-        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)
-        
+
+        if (SDIR) then
+           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)           
+        else
+           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
+        end if
+
         ! We now should have the identity. As a santity check, we might want
         ! to make sure that ABS(G(3)) ~ 0.
         call z_rot3_fusion(.TRUE., G, H)
-
-        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii-1), C2(3*ii-2), &
-        !     B2(3*ii-2), cmplx(H(1), H(2)))
-        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii+1), C2(3*ii+1), &
-        !     B2(3*ii+1), cmplx(H(1), -H(2)))
-        
      end do
   end if
      
