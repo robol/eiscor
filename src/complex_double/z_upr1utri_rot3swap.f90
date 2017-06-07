@@ -49,7 +49,7 @@ subroutine z_upr1utri_rot3swap(DIR,D,C,B,G)
     SYM = .TRUE.
   else
     SYM = .FALSE.
-  end if 
+ end if
 
   ! L2R
   if (DIR) then

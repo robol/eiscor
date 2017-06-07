@@ -45,7 +45,7 @@ subroutine z_upr1utri_unimodscale(ROW,D,C,B,SCL)
 
   ! update D regardless of row or column
   temp = SCL*cmplx(D(1),D(2),kind=8)
-  call d_rot2_vec2gen(dble(temp),aimag(temp),D(1),D(2),nrm)
+  call d_rot2_vec2gen(real(temp),aimag(temp),D(1),D(2),nrm)
   
   ! update B and C
   if (.NOT.ROW) then

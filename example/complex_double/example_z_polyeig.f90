@@ -3,7 +3,7 @@ program example_z_polyeig
   implicit none
 
   ! Test the use of the polyeig routine
-  integer, parameter :: D = 3, K = 15, N = D*K
+  integer, parameter :: D = 4, K = 64, N = D*K
   complex(8) :: P(K,K,D+1), V(K,N), EIGS(N), w(K)
   complex(8) :: tauq(K), taup(K), WORK(N)
   double precision :: DD(K), E(K), RWORK(4*K)

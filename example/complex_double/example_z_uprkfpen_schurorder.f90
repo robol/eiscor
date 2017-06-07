@@ -1,14 +1,15 @@
-program example_z_upr1fpen_schurorder
+program example_z_uprkfpen_schurorder
   implicit none
 
-  integer, parameter :: k = 2, dd = 2, N = dd * k
+  integer, parameter :: k = 16, dd = 2, N = dd * k
   integer :: ITS(N), INFO, ii, SEL(N), ISEL = 3, jj
   complex(8) :: MA(N,k), MB(N,k), T1(N,N), T2(N,N), EIGS(N)
-  real(8) :: Q(3*(N-1))
+  real(8) :: Q(3*K*(N-1))
   real(8) :: C1(3*N*k), B1(3*N*k), C2(3*N*k), B2(3*N*k), G(3), ERR
   real(8) :: D1(2*k*N), D2(2*k*N)
   complex(8) :: VV(2), GG(2,2), EIGSA(N), EIGSB(N)
   logical :: P(N-2)
+  double precision :: frobnorm
 
   ! Computation of the eigenvectors
   complex(8) :: QQ(N, N), ZZ(N, N)
@@ -33,8 +34,8 @@ program example_z_upr1fpen_schurorder
      end do
   end do
   ! make P0 lower triangular
-  do ii=1,k-1
-     do jj=ii+1,k
+  do ii=2, k ! 1,k-1
+     do jj=1,ii-1 ! ii+1,k
         MA(ii,jj)=cmplx(0d0,0d0,kind=8)
      end do
   end do
@@ -58,7 +59,7 @@ program example_z_upr1fpen_schurorder
      ZZ(ii,ii) = 1
   end  do
 
-  call z_uprk_compress(.TRUE.,.TRUE.,.FALSE.,N,K,MA,MB,N,P,Q,&
+  call z_uprk_compress2(.TRUE.,.TRUE.,.FALSE.,N,K,MA,MB,N,P,Q,&
        &D1,C1,B1,D2,C2,B2,QQ,ZZ,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkdense_factor: ", INFO
@@ -100,11 +101,46 @@ program example_z_upr1fpen_schurorder
   T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
 
   print *, 'T1'
-  do ii = 1, K
-     write (*,*) REAL(T1(ii, 1:K))
+  do ii = 1, N
+     write (*,*) (T1(ii, :))
   end do
 
-  SEL(1:ISEL) = (/ 3, 2, 4 /)
+  ! T2 = T1
+
+  ! Move the first two entries
+  call z_uprkfpen_move(.TRUE., N, K, N - 1, D1, C1, B1, D2, C2, B2, N, QQ, ZZ, 1, 'B')
+  call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,T1)
+  call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,T2)      
+
+  T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
+  T2 = MATMUL(ZZ, MATMUL(T2, CONJG(TRANSPOSE(QQ))))
+
+  !print *, 'T1'
+  !do ii = 1, N
+  !   write (*,*) REAL(T1(ii, :))
+  !end do
+
+  print *, 'T2'
+  do ii = 1, N
+     write (*,*) REAL(T2(ii, :))
+  end do
+  
+
+  T1(:, N-K+1:N) =   T1(:, N-K+1:N) - MA
+  do ii = 1, N-K
+     T1(ii+K,ii) = T1(ii+K,ii) - 1.d0
+  end do
+
+  T2(:,N-K+1:N) = T2(:, N-K+1:N) - MB
+  do ii = 1, N-K
+     T2(ii,ii) = T2(ii,ii) - 1.d0
+  end do
+    
+  print *, 'Residue = ', frobnorm(T1, N)
+  print *, 'Residue = ', frobnorm(T2, N)  
+  stop
+
+  SEL(1:ISEL) = (/ 1, 2, 4 /)
 
   print *, 'Permuting eigenvalues using '
   print *, ''
@@ -113,7 +149,7 @@ program example_z_upr1fpen_schurorder
   print *, ''
   print *, 'The selected eigenalues will be taken to the bottom'
   
-  call z_uprkfpen_ord(.TRUE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, ISEL, 'B', INFO)
+  call z_uprkfpen_ord(.TRUE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, 1, 'B', INFO)   
 
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,T1)
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,T2)
@@ -127,10 +163,52 @@ program example_z_upr1fpen_schurorder
   end do
 
   T1 = MATMUL(ZZ, MATMUL(T1, CONJG(TRANSPOSE(QQ))))
-  
+  T2 = MATMUL(ZZ, MATMUL(T2, CONJG(TRANSPOSE(QQ))))
+
   print *, 'T1'
   do ii = 1, N
-     print *, REAL(T1(ii,:))
+     ! print *, REAL(T1(ii,:))
   end do
 
-end program example_z_upr1fpen_schurorder
+  T1(:, N-K+1:N) =   T1(:, N-K+1:N) - MA
+  do ii = 1, N-K
+     T1(ii+K,ii) = T1(ii+K,ii) - 1.d0
+  end do
+
+  T2(:,N-K+1:N) = T2(:, N-K+1:N) - MB
+  do ii = 1, N-K
+     T2(ii,ii) = T2(ii,ii) - 1.d0
+  end do
+
+  print *, 'T2'
+  do ii = 1, N
+     print *, REAL(T2(ii,:))
+  end do
+
+  print *, 'MA'
+  do ii = 1, N
+     print *, REAL(MA(ii,:))
+  end do
+  
+  print *, 'residual T1', frobnorm(T1, N)
+  print *, 'residual T2', frobnorm(T2, N)  
+
+end program example_z_uprkfpen_schurorder
+
+function frobnorm(A, n)
+
+  double precision :: frobnorm
+  integer :: n, ii, jj
+  complex(8) :: A(n,n)
+
+  frobnorm = 0.d0
+
+  do ii = 1, n
+     do jj = 1, n
+        frobnorm = frobnorm + abs(A(ii,jj))**2
+     end do
+  end do
+
+  frobnorm = dsqrt(frobnorm)
+  
+end function frobnorm

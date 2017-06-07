@@ -62,8 +62,8 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
   ! local variables
   integer :: ii, ITS(2), INFO
   real(8) :: G(3), H(3)
-  complex(8) :: A(2,2)
-  logical :: P(2), SDIR
+  complex(8) :: A(2,2), B(2,2)
+  logical :: SDIR
 
   interface
      function l_upr1fact_hess(m,flags)
@@ -92,13 +92,8 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         
         G(2) = -G(2)
         G(3) = -G(3)
-        H = G    
-
-        if (SDIR) then
-           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
-        else
-           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
-        end if
+        H = G
+        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
         
         ! Invert the rotation and pass it throught the other matrix
         G(2) = -G(2)
@@ -114,18 +109,17 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
 
-        if (SDIR) then
-           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)           
-        else
-           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
-        end if
+        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)           
         
         ! We now should have the identity. As a santity check, we might want
         ! to make sure that ABS(G(3)) ~ 0. 
         call z_rot3_fusion(.TRUE., G, H)
 
-        call z_upr1utri_unimodscale(.TRUE., D1(2*ii-1), C1(3*ii-2), &
-             B1(3*ii-2), cmplx(H(1), H(2)))        
+        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii-1), C2(3*ii-2), &
+        !     B2(3*ii-2), cmplx(H(1), H(2)))
+        !call z_upr1utri_unimodscale(.TRUE., D2(2*ii+1), C2(3*ii+1), &
+        !     B2(3*ii+1), cmplx(H(1), H(2)))        
+        
      end do
   else
      do ii = ISEL, N - STR
@@ -142,20 +136,14 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            
            W(:,ii:ii+1) = matmul(W(:,ii:ii+1), A)
         end if
-        
-        G(2) = -G(2)
-        G(3) = -G(3)
-        H = G
 
-        if (SDIR) then
-           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
-        else
-           call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D2, C2, B2, G, ii)
-        end if
+        G(2:3) = -G(2:3)
+        H = G        
+        
+        call z_uprkutri_rot3swap(.TRUE., N, K, 1, K, D1, C1, B1, G, ii)
                 
-        ! Invert the rotation and pass it throught the other matrix
-        G(2) = -G(2)
-        G(3) = -G(3)
+        ! Invert the rotation and pass it through the other matrix
+        G(2:3) = -G(2:3)
 
         ! update right Schurvectors with G
         if (VEC) then        
@@ -167,15 +155,31 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
            V(:,ii:ii+1) = matmul(V(:,ii:ii+1), A)
         end if
 
-        if (SDIR) then
-           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)           
-        else
-           call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D1, C1, B1, G, ii)
-        end if
-
+        call z_uprkutri_rot3swap(.FALSE., N, K, 1, K, D2, C2, B2, G, ii)
+        
         ! We now should have the identity. As a santity check, we might want
         ! to make sure that ABS(G(3)) ~ 0.
-        call z_rot3_fusion(.TRUE., G, H)
+
+        ! The following blocks should be replaced by the call to z_rot3_fusion,
+        ! as soon as I get how it works. 
+        A(1,1) = cmplx(G(1),G(2),kind=8)
+        A(2,1) = cmplx(G(3),0d0,kind=8)
+        A(1,2) = cmplx(-G(3),0d0,kind=8)
+        A(2,2) = cmplx(G(1),-G(2),kind=8)
+        
+        B(1,1) = cmplx(H(1),H(2),kind=8)
+        B(2,1) = cmplx(H(3),0d0,kind=8)
+        B(1,2) = cmplx(-H(3),0d0,kind=8)
+        B(2,2) = cmplx(H(1),-H(2),kind=8)
+
+        A = MATMUL(A, B)        
+        
+        ! call z_rot3_fusion(.true., G, H)
+
+        H = (/ real(A(1,1)), aimag(A(1,1)), real(A(1,2)) /)
+        
+        call z_upr1utri_unimodscale(.true., D2(2*ii-1:2*ii),   0, 0, cmplx(H(1), H(2),  kind = 8))
+        call z_upr1utri_unimodscale(.true., D2(2*ii+1:2*ii+2), 0, 0, cmplx(H(1), -H(2), kind = 8))                
      end do
   end if
      
