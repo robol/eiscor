@@ -11,8 +11,7 @@ INSTALLDIR := $(HOME)
 
 # fortran compiler and flags
 FC := gfortran
-# FFLAGS := -O3 -std=f95
-FFLAGS := -O0 -g
+FFLAGS := -O3 -std=f95
 
 ifdef LAPACK_LIBS
   FFLAGS := $(FFLAGS) -DHAVE_LAPACK
