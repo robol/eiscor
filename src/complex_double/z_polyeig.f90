@@ -121,6 +121,8 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
      end do
   end do
 
+  scl = dsqrt(scl)
+
   if (scl .le. 1.d0) scl = 1.d0
 
 #ifdef HAVE_LAPACK

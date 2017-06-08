@@ -100,7 +100,7 @@ program example_z_matrixpoly_backward
      end do
 
      write(99, *) pol_norm, maxbe
-     deallocate(P,EIGS,V)     
+     deallocate(P,EIGS,V)
   end do
   close(99)
 
