@@ -178,18 +178,15 @@ subroutine z_uprkfpen_qz(VECR,VECL,ID,FUN,N,K,P,Q,D1,C1,B1,D2,C2,B2,M,V,W,ITS,IN
      !print*, "STR", STR, Q(3*STR), Q(3*STR+3), Q(3*STP), "ZERO",ZERO
 
 
-     do ll=1,N+1
-        do ii=1,k
-           if (B1(3*(ll-1)+3*N*(ii-1)+3).EQ.0d0) then
-              print*, "identity in position", ll, ii, "in iteration", kk, "STR", STR, "STP", STP, "ZERO", ZERO
-              print*, "Q(3)", abs(Q(3)), "Q(3*STR)", abs(Q(3*STR))
-           end if
-        end do
-     end do
-     
-           
-     
-
+     !do ll=1,N+1
+     !   do ii=1,k
+     !      if (B1(3*(ll-1)+3*N*(ii-1)+3).EQ.0d0) then
+     !         print*, "identity in position", ll, ii, "in iteration", kk, "STR", STR, "STP", STP, "ZERO", ZERO
+     !         print*, "Q(3)", abs(Q(3)), "Q(3*STR)", abs(Q(3*STR))
+     !      end if
+     !   end do
+     !end do
+               
      ! if 1x1 block remove and check again 
      if(STP == (STR+ZERO-1))then
 
@@ -211,7 +208,6 @@ subroutine z_uprkfpen_qz(VECR,VECL,ID,FUN,N,K,P,Q,D1,C1,B1,D2,C2,B2,M,V,W,ITS,IN
           ITCNT = 0
        end if
 
-       print*, "Singlestep"
        ! perform singleshift iteration
        call z_uprkfpen_singlestep(VECR,VECL,FUN,N,K,STR,STP,P,Q, &
             &D1,C1,B1, &

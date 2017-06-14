@@ -59,7 +59,7 @@ program example_z_uprkfpen_schurorder
      ZZ(ii,ii) = 1
   end  do
 
-  call z_uprk_compress2(.TRUE.,.TRUE.,.FALSE.,N,K,MA,MB,N,P,Q,&
+  call z_uprk_compress2(.TRUE.,.TRUE.,.TRUE.,.FALSE.,N,K,MA,MB,N,P,Q,&
        &D1,C1,B1,D2,C2,B2,QQ,ZZ,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkdense_factor: ", INFO
@@ -74,7 +74,7 @@ program example_z_uprkfpen_schurorder
   ! 
   ! stop
 
-  call z_uprkfpen_qz(.TRUE.,.FALSE.,l_upr1fact_hess,N,k,&
+  call z_uprkfpen_qz(.TRUE.,.TRUE.,.FALSE.,l_upr1fact_hess,N,k,&
        &P,Q,D1,C1,B1,D2,C2,B2,N,QQ,ZZ,ITS,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkfact_twistedqz: ", INFO

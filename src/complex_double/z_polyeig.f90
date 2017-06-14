@@ -221,14 +221,14 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
   end do  
   MB((D-1)*K+1:D*K,:) = MATMUL(CONJG(TRANSPOSE(ZZ(1:K,1:K))), MATMUL(MB((D-1)*K+1:D*K,:), QQ(1:K,1:K)))  
     
-  call z_uprk_compress2(.TRUE.,WANTV,.FALSE.,N,K,MA,MB,M,PP,Q,&
+  call z_uprk_compress2(.TRUE.,WANTV,WANTV,.FALSE.,N,K,MA,MB,M,PP,Q,&
        &D1,C1,B1,D2,C2,B2,QQ,ZZ,INFO)
   if (INFO.NE.0) then
      INFO = INFO + 1100
      return
   end if
 
-  call z_uprkfpen_qz(WANTV,.FALSE.,l_upr1fact_hess,N,k,&
+  call z_uprkfpen_qz(WANTV,WANTV,.FALSE.,l_upr1fact_hess,N,k,&
        &PP,Q,D1,C1,B1,D2,C2,B2,M,QQ,ZZ,ITS,INFO)
   if (INFO.NE.0) then
      INFO = INFO + 1200
