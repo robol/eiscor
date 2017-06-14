@@ -24,8 +24,12 @@
 !                    .TRUE.: second triangular factor is assumed nonzero
 !                    .FALSE.: second triangular factor is assumed to be identity
 !
-!  VEC             LOGICAL
-!                    .TRUE.: compute schurvector
+!  VECR            LOGICAL
+!                    .TRUE.: compute right schurvectors (V)
+!                    .FALSE.: no schurvectors
+!
+!  VECL            LOGICAL
+!                    .TRUE.: compute left schurvectors (W)
 !                    .FALSE.: no schurvectors
 !
 !  ID              LOGICAL
@@ -75,13 +79,13 @@
 !                    INFO = -10 implies W is invalid
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,M,P,Q,D1,&
+subroutine z_uprk_compress2(QZ,VECR,VECL,ID,N,K,Ain,Bin,M,P,Q,D1,&
      &C1,B1,D2,C2,B2,V,W,INFO)
 
   implicit none
   
   ! input variables
-  logical, intent(in) :: QZ, VEC, ID
+  logical, intent(in) :: QZ, VECR, VECL, ID
   integer, intent(in) :: N,K,M
   complex(8), intent(in) :: Ain(N,K), Bin(N,K)
   logical, intent(inout) :: P(N-2)
@@ -122,7 +126,7 @@ subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,M,P,Q,D1,&
 
 
   ! initalize V
-  if (VEC .AND. ID) then
+  if (VECR .AND. ID) then
      V = cmplx(0d0,0d0,kind=8)
      do ii=1,N
         V(ii,ii) = cmplx(1d0,0d0,kind=8)
@@ -130,7 +134,7 @@ subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,M,P,Q,D1,&
   end if
 
   ! initalize W
-  if (QZ .AND. VEC .AND. ID) then
+  if (QZ .AND. VECL .AND. ID) then
      W = cmplx(0d0,0d0,kind=8)
      do ii=1,N
         W(ii,ii) = cmplx(1d0,0d0,kind=8)
@@ -258,77 +262,84 @@ subroutine z_uprk_compress2(QZ,VEC,ID,N,K,Ain,Bin,M,P,Q,D1,&
      do ii = K,2,-1
         col = ii-1 ! rotation right of col th upper triangular
         bulge = Q((3*col*(N-1)+3*(jj-1)+1):(3*col*(N-1)+3*jj))
-        do row = jj,N-2 ! first row of the rotation
+        row = jj
+        do while ((row.LE.N-2).AND.(bulge(3).NE.0d0)) 
+           !print*, "row", row, "col", col
+           !do row = jj,N-2 ! first row of the rotation
            ! pass through diagonal D0
            ind0 = (col-1)*2*N+(row-1)*2
            call z_rot3_swapdiag(D0((ind0+1):(ind0+4)),bulge)
-           ! turnover through Q
-           call z_rot3_turnover(&
-                &Q((3*(col-1)*(N-1)+3*(row-1)+1):(3*(col-1)*(N-1)+3*row)),&
-                &Q((3*(col-1)*(N-1)+3*(row-1)+4):(3*(col-1)*(N-1)+3*row+3)),bulge)
-           ! update col
-           col = col - 1
-           ! update col if left most sequence was passed
-           if (col.EQ.0) then
-              if (QZ) then
-                 ! update (left) eigenvectors 
-                 ! update W
-                 if (VEC) then
+           if (bulge(3).NE.0d0) then
+              ! turnover through Q
+              call z_rot3_turnover(&
+                   &Q((3*(col-1)*(N-1)+3*(row-1)+1):(3*(col-1)*(N-1)+3*row)),&
+                   &Q((3*(col-1)*(N-1)+3*(row-1)+4):(3*(col-1)*(N-1)+3*row+3)),bulge)
+              ! update col
+              col = col - 1
+              ! update col if left most sequence was passed
+              if (col.EQ.0) then
+                 if (QZ) then
+                    ! update (left) eigenvectors 
+                    ! update W
+                    if (VECL) then
+                       
+                       H(1,1) = cmplx(bulge(1),bulge(2),kind=8)
+                       H(2,1) = cmplx(bulge(3),0d0,kind=8)
+                       H(1,2) = -H(2,1)
+                       H(2,2) = conjg(H(1,1))
+                    
+                       W(:,row+1:row+2) = matmul(W(:,row+1:row+2),H)
+                       
+                    end if
+                    ! invert bulge
+                    bulge(1) = bulge(1)
+                    bulge(2) = -bulge(2) 
+                    bulge(3) = -bulge(3)
+                    ! through B
+                    call z_uprkutri_rot3swap(.TRUE.,N,K,1,K,D2,C2,B2,bulge,row+1)
+                    ! invert bulge
+                    bulge(1) = bulge(1)
+                    bulge(2) = -bulge(2) 
+                    bulge(3) = -bulge(3)
+                 end if
+                 ! update (right) eigenvectors 
+                 ! update V
+                 if (VECR) then
                     
                     H(1,1) = cmplx(bulge(1),bulge(2),kind=8)
                     H(2,1) = cmplx(bulge(3),0d0,kind=8)
                     H(1,2) = -H(2,1)
                     H(2,2) = conjg(H(1,1))
                     
-                    W(:,row+1:row+2) = matmul(W(:,row+1:row+2),H)
+                    V(:,row+1:row+2) = matmul(V(:,row+1:row+2),H)
                     
                  end if
-                 ! invert bulge
-                 bulge(1) = bulge(1)
-                 bulge(2) = -bulge(2) 
-                 bulge(3) = -bulge(3)
-                 ! through B
-                 call z_uprkutri_rot3swap(.TRUE.,N,K,1,K,D2,C2,B2,bulge,row+1)
-                 ! invert bulge
-                 bulge(1) = bulge(1)
-                 bulge(2) = -bulge(2) 
-                 bulge(3) = -bulge(3)
+                 ! pass through triangulars without rotations in front
+                 ! through A
+                 call z_uprkutri_rot3swap(.FALSE.,N,K,1,K,D1,C1,B1,bulge,row+1)
+                 col = K                 
               end if
-              ! update (right) eigenvectors 
-              ! update V
-              if (VEC) then
-                 
-                 H(1,1) = cmplx(bulge(1),bulge(2),kind=8)
-                 H(2,1) = cmplx(bulge(3),0d0,kind=8)
-                 H(1,2) = -H(2,1)
-                 H(2,2) = conjg(H(1,1))
-                 
-                 V(:,row+1:row+2) = matmul(V(:,row+1:row+2),H)
-                 
-              end if
-              ! pass through triangulars without rotations in front
-              ! through A
-              call z_uprkutri_rot3swap(.FALSE.,N,K,1,K,D1,C1,B1,bulge,row+1)
-              col = K
            end if
+           row = row + 1
         end do
 
-        ! fuse rotation into current rotation
-        ind0 = (col-1)*2*N+(row-1)*2
-        call z_rot3_swapdiag(D0((ind0+1):(ind0+4)),bulge)
-        call z_rot3_fusion(.TRUE., Q((col*3*(N-1)-2):(col*3*(N-1))), bulge)
-        ! scale rows of R1
-        ind = col*3*N
-        ind1 = col*2*N
-        call z_upr1utri_unimodscale(.TRUE.,D0(ind1-3:ind1-2), &
-             C1(ind-5:ind-3), & 
-             B1(ind-5:ind-3), &
-             cmplx(bulge(1),bulge(2),kind=8))
-        call z_upr1utri_unimodscale(.TRUE.,D0(ind1-1:ind1), &
-             C1(ind-2:ind), & 
-             B1(ind-2:ind), &
-             cmplx(bulge(1),-bulge(2),kind=8))
-        
+        if (bulge(3).NE.0d0) then
+           ! fuse rotation into current rotation
+           ind0 = (col-1)*2*N+(row-1)*2
+           call z_rot3_swapdiag(D0((ind0+1):(ind0+4)),bulge)
+           call z_rot3_fusion(.TRUE., Q((col*3*(N-1)-2):(col*3*(N-1))), bulge)
+           ! scale rows of R1
+           ind = col*3*N
+           ind1 = col*2*N
+           call z_upr1utri_unimodscale(.TRUE.,D0(ind1-3:ind1-2), &
+                C1(ind-5:ind-3), & 
+                B1(ind-5:ind-3), &
+                cmplx(bulge(1),bulge(2),kind=8))
+           call z_upr1utri_unimodscale(.TRUE.,D0(ind1-1:ind1), &
+                C1(ind-2:ind), & 
+                B1(ind-2:ind), &
+                cmplx(bulge(1),-bulge(2),kind=8))
+        end if
 
      end do
   end do
