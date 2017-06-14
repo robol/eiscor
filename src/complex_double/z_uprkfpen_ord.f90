@@ -12,9 +12,13 @@
 !
 ! INPUT VARIABLES:
 !
-!  VEC             LOGICAL
-!                    If .TRUE. the Schur vectors V and W will be updated, 
-!                    otherwise V, W, and M are never referenced in the code
+!  VECR            LOGICAL
+!                    If .TRUE. the right Schur vectors V will be updated, 
+!                    otherwise V is never referenced in the code
+!
+!  VECL            LOGICAL
+!                    If .TRUE. the left Schur vectors W will be updated, 
+!                    otherwise W is never referenced in the code
 !
 !  N               INTEGER
 !                    dimension of matrix
@@ -55,12 +59,12 @@
 !                    INFO = 0 implies successful computation
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,DIR,INFO)
+subroutine z_uprkfpen_ord(VECR,VECL,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,DIR,INFO)
   
   implicit none
 
   ! input variables
-  logical, intent(in) :: VEC
+  logical, intent(in) :: VECR, VECL
   integer, intent(in) :: N, K, M, NSEL
   integer, intent(inout) :: SEL(NSEL)
   real(8), intent(inout) :: D1(2*N*K), D2(2*N*K), C1(3*N*K), B1(3*N*K), C2(3*N*K), B2(3*N*K)
@@ -82,7 +86,7 @@ subroutine z_uprkfpen_ord(VEC,N,K,D1,C1,B1,D2,C2,B2,SEL,M,V,W,NSEL,DIR,INFO)
         if ((DIR .eq. 'T') .and. (SEL(jj).gt.SEL(ii))) offset = offset + 1
      END DO
      
-     call z_uprkfpen_move(VEC, N, K, ii, D1, C1, B1, &
+     call z_uprkfpen_move(VECR, VECL, N, K, ii, D1, C1, B1, &
           D2, C2, B2, &
           M, V, W, SEL(ii) + offset, DIR)
   end do

@@ -100,10 +100,10 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
   end if
 
   if (wantv) then
-     allocate(QQ(M,N), ZZ(M,N), nZZ(M,N))
+     allocate(QQ(K,K), ZZ(M,N), nZZ(M,N))
      allocate(nD1(2*N*K), nD2(2*N*K), nC1(3*N*K), nC2(3*N*K), nB1(3*N*K), nB2(3*N*K))
   else
-     allocate(ZZ(M,N), QQ(M,N))
+     allocate(ZZ(M,N), QQ(K,K))
   end if
 
   allocate(MA(N,K), MB(N,K), D1(2*N*K), D2(2*N*K), C1(3*N*K), C2(3*N*K), B1(3*N*K), B2(3*N*K), PP(N-2), Q(3*K*(N-1)))
@@ -164,22 +164,22 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
            QQ(ii,ii) = 1.d0
         end do
         
-        call zgghrd('V', 'I', K, 1, K, P0, K, PD, K, ZZ, M, QQ, M, INFO)
-        call zhgeqz('S', 'V', 'V', K, 1, K, P0, K, PD, K, EIGS, MA, ZZ, M, QQ, M, MB, K*N, D1, INFO)
+        call zgghrd('V', 'I', K, 1, K, P0, K, PD, K, ZZ, M, QQ, K, INFO)
+        call zhgeqz('S', 'V', 'V', K, 1, K, P0, K, PD, K, EIGS, MA, ZZ, M, QQ, K, MB, K*N, D1, INFO)
         
         ! Copy the transformation at the bottom of the matrix, for the recovery of the
         ! eigenvectors of modulus larger than 1.
         if (wantv) then
-           QQ(K+1:2*K,K*(D-1)+1:K*D) = QQ(1:K,1:K)    
+           ! QQ(K+1:2*K,K*(D-1)+1:K*D) = QQ(1:K,1:K)    
            ZZ(K+1:2*K,K*(D-1)+1:K*D) = ZZ(1:K,1:K)
         end if
      else
-        call zgghrd('N', 'N', K, 1, K, P0, K, PD, K, ZZ, M, QQ, M, INFO)
-        call zhgeqz('S', 'N', 'N', K, 1, K, P0, K, PD, K, EIGS, MA, ZZ, M, QQ, M, MB, K*N, D1, INFO)
+        call zgghrd('N', 'N', K, 1, K, P0, K, PD, K, ZZ, M, QQ, K, INFO)
+        call zhgeqz('S', 'N', 'N', K, 1, K, P0, K, PD, K, EIGS, MA, ZZ, M, QQ, K, MB, K*N, D1, INFO)
      end if
   else
      do ii = 1, K
-        QQ(ii,ii) = 1.d0; QQ(K+ii,(D-1)*K+ii) = 1.d0
+        ! QQ(ii,ii) = 1.d0; QQ(K+ii,(D-1)*K+ii) = 1.d0
         ZZ(ii,ii) = 1.d0; ZZ(K+ii,(D-1)*K+ii) = 1.d0        
      end do
   end if
@@ -221,15 +221,15 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
   end do  
   MB((D-1)*K+1:D*K,:) = MATMUL(CONJG(TRANSPOSE(ZZ(1:K,1:K))), MATMUL(MB((D-1)*K+1:D*K,:), QQ(1:K,1:K)))  
     
-  call z_uprk_compress2(.TRUE.,WANTV,WANTV,.FALSE.,N,K,MA,MB,M,PP,Q,&
-       &D1,C1,B1,D2,C2,B2,QQ,ZZ,INFO)
+  call z_uprk_compress2(.TRUE.,.FALSE.,WANTV,.FALSE.,N,K,MA,MB,M,PP,Q,&
+       &D1,C1,B1,D2,C2,B2,0,ZZ,INFO)
   if (INFO.NE.0) then
      INFO = INFO + 1100
      return
   end if
 
-  call z_uprkfpen_qz(WANTV,WANTV,.FALSE.,l_upr1fact_hess,N,k,&
-       &PP,Q,D1,C1,B1,D2,C2,B2,M,QQ,ZZ,ITS,INFO)
+  call z_uprkfpen_qz(.FALSE.,WANTV,.FALSE.,l_upr1fact_hess,N,k,&
+       &PP,Q,D1,C1,B1,D2,C2,B2,M,0,ZZ,ITS,INFO)
   if (INFO.NE.0) then
      INFO = INFO + 1200
      return
@@ -257,10 +257,9 @@ subroutine z_polyeig(VEC, K, D, P, EIGS, V, INFO)
      do ii = 1, N
         nZZ = ZZ; nD1 = D1; nD2 = D2; nB1 = B1; nB2 = B2; nC1 = C1; nC2 = C2
              
-        ! Push the eigenvalue in position ii to the bottom of the
-        ! Schur form.
-        call z_uprkfpen_ord(.TRUE., N, K, nD1, nC1, nB1, nD2, nC2, nB2, &
-             ii, M, QQ, nZZ, 1, 'B', INFO)
+        ! Push the eigenvalue in position ii to the bottom of the Schur form.
+        call z_uprkfpen_ord(.FALSE., .TRUE., N, K, nD1, nC1, nB1, nD2, nC2, nB2, &
+             ii, M, 0, nZZ, 1, 'B', INFO)
 
         if (INFO .ne. 0) then
            INFO = INFO + 1300

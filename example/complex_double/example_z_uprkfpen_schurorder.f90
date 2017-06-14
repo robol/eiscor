@@ -108,7 +108,7 @@ program example_z_uprkfpen_schurorder
   ! T2 = T1
 
   ! Move the first two entries
-  call z_uprkfpen_move(.TRUE., N, K, N - 1, D1, C1, B1, D2, C2, B2, N, QQ, ZZ, 1, 'B')
+  call z_uprkfpen_move(.TRUE., .TRUE., N, K, N - 1, D1, C1, B1, D2, C2, B2, N, QQ, ZZ, 1, 'B')
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,T1)
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,T2)      
 
@@ -149,7 +149,7 @@ program example_z_uprkfpen_schurorder
   print *, ''
   print *, 'The selected eigenalues will be taken to the bottom'
   
-  call z_uprkfpen_ord(.TRUE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, 1, 'B', INFO)   
+  call z_uprkfpen_ord(.TRUE., .TRUE., N, k, D1, C1, B1, D2, C2, B2, SEL(1), N, QQ, ZZ, 1, 'B', INFO)   
 
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D1,C1,B1,T1)
   call z_uprkutri_decompress(.FALSE.,N,K,1,N-1,D2,C2,B2,T2)

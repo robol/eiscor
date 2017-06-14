@@ -12,8 +12,12 @@
 !
 ! INPUT VARIABLES:
 !
-!  VEC             LOGICAL
-!                    If .TRUE., the Schur vector components are updated.
+!  VECR            LOGICAL
+!                    If .TRUE., the right Schur vector components are updated.
+!                    If .FALSE., they are never referenced.
+!
+!  VECL            LOGICAL
+!                    If .TRUE., the left Schur vector components are updated.
 !                    If .FALSE., they are never referenced. 
 !
 !  N               INTEGER
@@ -47,12 +51,12 @@
 ! OUTPUT VARIABLES:
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
+subroutine z_uprkfpen_move(VECR,VECL,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
   
   implicit none
 
   ! input variables
-  logical, intent(in) :: VEC
+  logical, intent(in) :: VECR, VECL
   integer, intent(in) :: N, K, ISEL, M, STR
   real(8), intent(inout) :: C1(3*N*K), B1(3*N*K), C2(3*N*K), B2(3*N*K)
   real(8), intent(inout) :: D1(2*N*K), D2(2*N*K)
@@ -71,7 +75,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
        integer, intent(in) :: m
        logical, dimension(m-2), intent(in) :: flags
      end function l_upr1fact_hess
-  end interface  
+  end interface
 
   ! Move the specified eigenvalue to the top or to the bottom
   if (DIR .EQ. 'T') then
@@ -81,7 +85,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
              C1, B1, D2, C2, B2, G, SDIR)
         
         ! update left Schurvectors with G
-        if (VEC) then        
+        if (VECL) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)
@@ -100,7 +104,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         G(3) = -G(3)
         
         ! update right Schurvectors with G
-        if (VEC) then        
+        if (VECR) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)
@@ -128,7 +132,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
              C1, B1, D2, C2, B2, G, SDIR)
         
         ! update left Schurvectors with G
-100     if (VEC) then        
+100     if (VECL) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)
@@ -146,7 +150,7 @@ subroutine z_uprkfpen_move(VEC,N,K,STR,D1,C1,B1,D2,C2,B2,M,V,W,ISEL,DIR)
         G(2:3) = -G(2:3)
 
         ! update right Schurvectors with G
-        if (VEC) then        
+        if (VECR) then        
            A(1,1) = cmplx(G(1),G(2),kind=8)
            A(2,1) = cmplx(G(3),0d0,kind=8)
            A(1,2) = cmplx(-G(3),0d0,kind=8)

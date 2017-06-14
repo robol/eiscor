@@ -11,7 +11,7 @@ program example_z_matrixpoly_backward
 
   ! Maximum number of tests to perform with the different norms
   maxtests = 1000
-  maxnumber = 10
+  maxnumber = 7
 
   call system_clock(count_rate = c_rate)  
   call u_randomseed_initialize(INFO)
@@ -101,6 +101,8 @@ program example_z_matrixpoly_backward
 
      write(99, *) pol_norm, maxbe
      deallocate(P,EIGS,V)
+
+     print *, 'Relative be', maxbe / pol_norm
   end do
   close(99)
 
