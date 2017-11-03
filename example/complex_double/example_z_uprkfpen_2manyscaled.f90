@@ -17,7 +17,7 @@ program example_z_uprkfpen_2manyscaled
   
   ! compute variables
   integer, parameter :: dd = 10
-  integer, parameter :: kpara = 100
+  integer, parameter :: kpara = 6
   real(8) :: norm, norma, expo
   logical, parameter :: output=.FALSE.
   !logical, parameter :: output=.TRUE.
@@ -87,8 +87,8 @@ program example_z_uprkfpen_2manyscaled
 
 
   open (unit=7, file="err.txt", status='unknown', position = 'append')
-  open (unit=8, file="errA.txt", status='unknown', position = 'append')
-  open (unit=9, file="errB.txt", status='unknown', position = 'append')
+  open (unit=8, file="errAdavid.txt", status='unknown', position = 'append')
+  open (unit=9, file="errBdavid.txt", status='unknown', position = 'append')
 
 
   !call u_fixedseed_initialize(INFO)  
@@ -212,8 +212,8 @@ program example_z_uprkfpen_2manyscaled
         
         norma = sqrt(h) 
 
-  ! scl = 1.d0
-  scl = norma
+  scl = 1.d0
+  ! scl = norma
 
   ! Perform scaling
   MA = MA / scl
@@ -338,7 +338,7 @@ program example_z_uprkfpen_2manyscaled
   ! Schur decomposition
   call system_clock(count=c_start3)
 
-  call z_uprk_compress2(.TRUE.,.TRUE.,.TRUE.,N,K,MA,MB,P,Q,&
+  call z_uprk_compress2(.TRUE.,.TRUE.,.TRUE.,.TRUE.,N,K,MA,MB,N,P,Q,&
        &D1,C1,B1,D2,C2,B2,V,W,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkdense_factor: ", INFO
@@ -401,7 +401,7 @@ program example_z_uprkfpen_2manyscaled
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! (twisted) Hessenberg QZ
-  call z_uprkfpen_qz(.TRUE.,.FALSE.,l_upr1fact_hess,N,k,&
+  call z_uprkfpen_qz(.TRUE.,.TRUE.,.FALSE.,l_upr1fact_hess,N,k,&
        &P,Q,D1,C1,B1,D2,C2,B2,N,V,W,ITS,INFO)
   if (INFO.NE.0) then
      print*, "Info code from z_uprkfact_twistedqz: ", INFO
